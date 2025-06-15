@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2D PVP 턴제 게임</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f0f0f0; padding: 20px; text-align: center; }
+    #output {
+      width: 100%; max-width: 600px; height: 300px; margin: 0 auto 20px;
+      padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px;
+      overflow-y: auto; white-space: pre-line; text-align: left;
+    }
+    button {
+      padding: 10px 20px; margin: 5px; border: none; border-radius: 5px;
+      background-color: #007bff; color: white; font-size: 16px; cursor: pointer;
+    }
+    button:hover { background-color: #0056b3; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>2D 턴제 PVP 게임</h1>
+  <div id="selection">
+    <p>캐릭터를 선택하세요:</p>
+    <button onclick="selectCharacter('Mage')">마법사</button>
+    <button onclick="selectCharacter('SwordMaster')">소드마스터</button>
+    <button onclick="selectCharacter('Gunner')">거너</button>
+    <button onclick="selectCharacter('Priest')">프리스트</button>
+  </div>
+  <div id="gameUI" class="hidden">
+    <div id="output">게임 로그가 여기에 표시됩니다.</div>
+    <div>
+      <button onclick="attack('ultimate')">궁극기</button>
+      <button onclick="attack('main')">주력기</button>
+      <button onclick="attack('normal')">일반기</button>
+    </div>
+    <div style="margin-top: 20px;">
+      <button onclick="location.reload()">🔁 다시 시작</button>
+    </div>
+  </div>
+  <script>
+    class Skill {
+      constructor(name, damage, accuracy) {
+        this.name = name;
+        this.damage = damage;
+        this.accuracy = accuracy;
+      }
+      hit() { return Math.random() * 100 < this.accuracy; }
+    }
+    class Character {
+      constructor(name, hp) {
+        this.name = name;
+        this.hp = hp;
+      }
+      takeDamage(damage) { this.hp -= damage; }
+      ultimate(target) {}
+      mainSkill(target) {}
+      normalSkill(target) {}
+      isAlive() { return this.hp > 0; }
+    }
+    class Mage extends Character {
+      constructor(name) {
+        super(name, 100);
+        this.meteor = new Skill("메테오", 200, 5);
+        this.fireball = new Skill("파이어볼", 80, 20);
+        this.rapidFire = new Skill("연속발사", 20, 100);
+      }
+      ultimate(t) { log(`${this.name}(이)가 메테오를 시전합니다!`); if (this.meteor.hit()) { t.takeDamage(this.meteor.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      mainSkill(t) { log(`${this.name}(이)가 파이어볼을 시전합니다!`); if (this.fireball.hit()) { t.takeDamage(this.fireball.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      normalSkill(t) { log(`${this.name}(이)가 연속발사를 시전합니다!`); t.takeDamage(this.rapidFire.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); }
+    }
+    class SwordMaster extends Character {
+      constructor(name) {
+        super(name, 120);
+        this.swordDance = new Skill("환영검무", 60, 35);
+        this.drawSlash = new Skill("발도", 40, 70);
+        this.swordArt = new Skill("리귀검술", 17, 100);
+      }
+      ultimate(t) { log(`${this.name}(이)가 환영검무를 사용합니다!`); if (this.swordDance.hit()) { t.takeDamage(this.swordDance.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      mainSkill(t) { log(`${this.name}(이)가 발도를 사용합니다!`); if (this.drawSlash.hit()) { t.takeDamage(this.drawSlash.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      normalSkill(t) { log(`${this.name}(이)가 리귀검술을 사용합니다!`); t.takeDamage(this.swordArt.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); }
+    }
+    class Gunner extends Character {
+      constructor(name) {
+        super(name, 110);
+        this.quantumBomb = new Skill("양자폭탄", 90, 10);
+        this.laserBazooka = new Skill("레이저바주카", 50, 40);
+        this.gatlingGun = new Skill("게틀링건", 15, 100);
+      }
+      ultimate(t) { log(`${this.name}(이)가 양자폭탄을 발사합니다!`); if (this.quantumBomb.hit()) { t.takeDamage(this.quantumBomb.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      mainSkill(t) { log(`${this.name}(이)가 레이저바주카를 발사합니다!`); if (this.laserBazooka.hit()) { t.takeDamage(this.laserBazooka.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      normalSkill(t) { log(`${this.name}(이)가 게틀링건을 발사합니다!`); t.takeDamage(this.gatlingGun.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); }
+    }
+    class Priest extends Character {
+      constructor(name) {
+        super(name, 150);
+        this.judgmentMaul = new Skill("참회의 망치", 50, 60);
+        this.deflectingWall = new Skill("디플렉트 월", 35, 85);
+        this.bladePure = new Skill("순백의 칼날", 10, 100);
+      }
+      ultimate(t) { log(`${this.name}(이)가 참회의 망치를 시전합니다!`); if (this.judgmentMaul.hit()) { t.takeDamage(this.judgmentMaul.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      mainSkill(t) { log(`${this.name}(이)가 디플렉트 월을 시전합니다!`); if (this.deflectingWall.hit()) { t.takeDamage(this.deflectingWall.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); } else log("실패!"); }
+      normalSkill(t) { log(`${this.name}(이)가 순백의 칼날을 시전합니다!`); t.takeDamage(this.bladePure.damage); log(`명중! ${t.name}의 체력: ${t.hp}`); }
+    }
+    function log(msg) {
+      const output = document.getElementById("output");
+      output.textContent += msg + "\n";
+      output.scrollTop = output.scrollHeight;
+    }
+    let player, enemy, playerTurn;
+    function selectCharacter(type) {
+      if (type === "Mage") player = new Mage("플레이어");
+      else if (type === "SwordMaster") player = new SwordMaster("플레이어");
+      else if (type === "Gunner") player = new Gunner("플레이어");
+      else if (type === "Priest") player = new Priest("플레이어");
+      const enemyTypes = [Mage, SwordMaster, Gunner, Priest];
+      const EnemyClass = enemyTypes[Math.floor(Math.random() * 4)];
+      enemy = new EnemyClass("적");
+      playerTurn = Math.random() < 0.5;
+      log(`전투 시작! ${playerTurn ? '플레이어' : '적'}(이)가 선공입니다.`);
+      document.getElementById("selection").classList.add("hidden");
+      document.getElementById("gameUI").classList.remove("hidden");
+      if (!playerTurn) setTimeout(enemyAttack, 800);
+    }
+    function enemyAttack() {
+      if (!enemy.isAlive() || !player.isAlive()) return;
+      log("\n적의 공격!");
+      const enemySkill = Math.floor(Math.random() * 3);
+      if (enemySkill === 0) enemy.ultimate(player);
+      else if (enemySkill === 1) enemy.mainSkill(player);
+      else enemy.normalSkill(player);
+      if (!player.isAlive()) { log("플레이어가 쓰러졌습니다. 패배."); return; }
+      playerTurn = true;
+    }
+    function attack(skillType) {
+      if (!player.isAlive() || !enemy.isAlive()) return;
+      if (!playerTurn) return;
+      if (skillType === "ultimate") player.ultimate(enemy);
+      else if (skillType === "main") player.mainSkill(enemy);
+      else if (skillType === "normal") player.normalSkill(enemy);
+      if (!enemy.isAlive()) { log("적을 처치했습니다! 승리!"); return; }
+      playerTurn = false;
+      setTimeout(enemyAttack, 800);
+    }
+  </script>
+</body>
+</html>
